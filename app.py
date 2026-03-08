@@ -116,10 +116,17 @@ if uploaded_file:
 
     # ── Student info card: 3 columns × 2 rows so nothing overlaps ────────────
     # Split 6 identity fields into two rows of 3
-    id_items = [
-        (identity_labels[col], student_row[col])
-        for col in identity_labels
-    ]
+    FULL_MARK = len(mark_cols) * 5  # 8 subjects × 5 = 40
+
+    id_items = []
+    for col in identity_labels:
+        value = student_row[col]
+        # Format Total Score as "37/40 (92.5%)"
+        if identity_labels[col] == "Total Score":
+            pct = round(value / FULL_MARK * 100, 1)
+            value = f"{value}/{FULL_MARK} ({pct}%)"
+        id_items.append((identity_labels[col], value))
+
     st.markdown(
         """
         <style>
@@ -154,7 +161,7 @@ if uploaded_file:
     with st.expander("📊 View raw scores for this student"):
         score_df = pd.DataFrame({
             "Subject / Skill": categories,
-            "Score": values,
+            "Score": [f"{int(v)}/5" for v in values],
         })
         st.dataframe(score_df, use_container_width=True, hide_index=True)
 
