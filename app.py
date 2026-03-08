@@ -82,13 +82,6 @@ if uploaded_file:
     plot_cats    = categories + [categories[0]]
     plot_values  = values + [values[0]]
 
-    # Compose the student info block shown as the chart subtitle/annotation
-    info_lines = [
-        f"<b>{identity_labels[col]}:</b> {student_row[col]}"
-        for col in identity_labels
-    ]
-    info_text = "   |   ".join(info_lines)   # single-line header under title
-
     fig = go.Figure()
 
     fig.add_trace(go.Scatterpolar(
@@ -102,7 +95,6 @@ if uploaded_file:
     ))
 
     fig.update_layout(
-        # Chart title includes student name; info_text sits below via annotation
         title=dict(
             text=f"Performance Radar — {selected_name}",
             font=dict(size=18),
@@ -117,20 +109,46 @@ if uploaded_file:
             )
         ),
         showlegend=False,
-        annotations=[
-            dict(
-                text=info_text,
-                xref="paper", yref="paper",
-                x=0.5, y=-0.12,         # below the chart
-                showarrow=False,
-                font=dict(size=11),
-                align="center",
-            )
-        ],
-        margin=dict(b=120),             # extra bottom margin for annotation
+        margin=dict(b=40),
     )
 
     st.plotly_chart(fig, use_container_width=True)
+
+    # ── Student info card: 3 columns × 2 rows so nothing overlaps ────────────
+    # Split 6 identity fields into two rows of 3
+    id_items = [
+        (identity_labels[col], student_row[col])
+        for col in identity_labels
+    ]
+    st.markdown(
+        """
+        <style>
+        .info-card {
+            background: #f0f4fa;
+            border-radius: 10px;
+            padding: 14px 20px;
+            margin-bottom: 12px;
+        }
+        .info-label { font-size: 12px; color: #555; margin-bottom: 2px; }
+        .info-value { font-size: 15px; font-weight: 600; color: #1a1a2e; word-break: break-word; }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Render two rows of three metric-style boxes
+    for row_items in [id_items[:3], id_items[3:]]:
+        cols = st.columns(3)
+        for col_ui, (label, value) in zip(cols, row_items):
+            col_ui.markdown(
+                f"""
+                <div class="info-card">
+                    <div class="info-label">{label}</div>
+                    <div class="info-value">{value}</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
     # ── Optional: show the raw mark scores as a small table ──────────────────
     with st.expander("📊 View raw scores for this student"):
