@@ -173,11 +173,10 @@ if uploaded_file:
 
     with col1:
         # Export the current student's interactive chart as a self-contained HTML file
-        html_buffer = BytesIO()
-        fig.write_html(html_buffer)
+        html_str = fig.to_html(full_html=True, include_plotlyjs="cdn")
         st.download_button(
             label=f"⬇️ Download {selected_name}'s Interactive Chart (HTML)",
-            data=html_buffer.getvalue(),
+            data=html_str.encode("utf-8"),
             file_name=f"{selected_name}_radar.html",
             mime="text/html",
         )
