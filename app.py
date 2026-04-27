@@ -166,13 +166,12 @@ if uploaded_file:
         st.dataframe(score_df, use_container_width=True, hide_index=True)
 
     # ── Download section ──────────────────────────────────────────────────────
-    st.divider()
+        st.divider()
     st.subheader("Reports & Exports")
 
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
 
     with col1:
-        # Export the current student's interactive chart as a self-contained HTML file
         html_str = fig.to_html(full_html=True, include_plotlyjs="cdn")
         st.download_button(
             label=f"⬇️ Download {selected_name}'s Interactive Chart (HTML)",
@@ -182,7 +181,6 @@ if uploaded_file:
         )
 
     with col2:
-        # Export the full dataset (all students, all columns) as CSV
         csv_data = df.to_csv(index=False).encode("utf-8")
         st.download_button(
             label="⬇️ Download Full Student Data (CSV)",
@@ -190,6 +188,37 @@ if uploaded_file:
             file_name="full_student_report.csv",
             mime="text/csv",
         )
+
+    with col3:
+        score_col = df.columns[IDENTITY_COLS["Score"]]
+        top20 = (
+            df[[df.columns[IDENTITY_COLS["Nama Pelajar"]],
+                df.columns[IDENTITY_COLS["Kelas"]],
+                df.columns[IDENTITY_COLS["Sekolah"]],
+                score_col]]
+            .sort_values(score_col, ascending=False)
+            .head(20)
+            .reset_index(drop=True)
+        )
+        top20.index += 1  # rank starts at 1
+        top20.index.name = "Rank"
+        top20_csv = top20.to_csv().encode("utf-8")
+        st.download_button(
+            label="⬇️ Download Top 20 Students (CSV)",
+            data=top20_csv,
+            file_name="top20_students.csv",
+            mime="text/csv",
+        )
+
+    # ── Top 20 leaderboard table ──────────────────────────────────────────────
+    st.subheader("🏆 Top 20 Students")
+    FULL_MARK = len(mark_cols) * 5
+    top20_display = top20.copy()
+    top20_display.columns = ["Name", "Class", "School", "Total Score"]
+    top20_display["Total Score"] = top20_display["Total Score"].apply(
+        lambda v: f"{v}/{FULL_MARK} ({round(v/FULL_MARK*100, 1)}%)"
+    )
+    st.dataframe(top20_display, use_container_width=True)
 
     # ── Class-wide comparison (bonus view) ───────────────────────────────────
     st.divider()
